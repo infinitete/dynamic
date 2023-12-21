@@ -44,7 +44,9 @@ type Parser struct {
 
 func (p Parser) Parse(t any) Tree {
 	depth := 1
-	return Tree{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
+	tree := Tree{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
+	_ = tree.Metas()
+	return tree
 }
 
 func (p Parser) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {

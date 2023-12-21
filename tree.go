@@ -2,6 +2,7 @@ package dynamic
 
 type Tree struct {
 	Nodes    []*Node
+	metas    []*Meta
 	maxLevel int
 }
 
@@ -55,6 +56,7 @@ func (t *Tree) paths(node *Node) []string {
 	}
 	paths := []string{node.Field}
 	paths = append(t.paths(t.GetParent(node)), paths...)
+
 	return paths
 }
 
@@ -63,13 +65,18 @@ func (t *Tree) meta(node *Node) *Meta {
 		return nil
 	}
 
-	return &Meta{
+	meta := &Meta{
 		Node:     node,
 		Paths:    t.paths(node),
 		StartX:   t.OffsetX(node),
 		StartY:   node.Y(),
 		CurrentY: node.Y(),
 	}
+
+	meta.EndX = meta.StartX + meta.Node.Cols() - 1
+	meta.EndY = meta.StartY
+
+	return meta
 }
 
 func (t *Tree) childrenMetas(node *Node) []*Meta {
@@ -163,6 +170,10 @@ func (t Tree) OffsetX(node *Node) int {
 // Metas
 // 获取每一个元素的可渲染元数据
 func (t *Tree) Metas() []*Meta {
+	if t.metas != nil {
+		return t.metas
+	}
+
 	var metas []*Meta
 
 	for _, node := range t.Nodes {
@@ -171,18 +182,24 @@ func (t *Tree) Metas() []*Meta {
 		metas = append(metas, nodeMeta)
 		metas = append(metas, nodeChilrenMetas...)
 	}
+	t.metas = metas
 
-	return metas
+	for _, meta := range metas {
+		if len(meta.Node.Children) == 0 {
+			meta.EndY = t.MaxLevel()
+		}
+	}
+
+	return t.metas
 }
 
 func (t *Tree) MaxLevel() int {
-	if len(t.Nodes) == 0 {
+	if t.Nodes == nil {
 		return 0
 	}
 
 	if t.maxLevel == 0 {
-		metas := t.Metas()
-		for _, meta := range metas {
+		for _, meta := range t.metas {
 			if meta.Node.Level > t.maxLevel {
 				t.maxLevel = meta.Node.Level
 			}
