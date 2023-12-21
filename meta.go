@@ -3,14 +3,7 @@ package dynamic
 // Meta
 // 可渲染元数据
 type Meta struct {
-
-	// Title
-	// 节点文字
-	Title string
-
-	// Field
-	// 节点字段
-	Field string
+	Node *Node
 
 	// Paths
 	// 渲染路径

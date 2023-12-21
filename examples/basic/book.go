@@ -53,6 +53,8 @@ func main() {
 	for _, meta := range tree.Metas() {
 		fmt.Printf("%s\n", strings.Join(meta.Paths, "->"))
 	}
+
+	fmt.Printf("MaxLevel: %d\n", tree.MaxLevel())
 }
 
 func printNode(tree dynamic.Tree, node *dynamic.Node) {

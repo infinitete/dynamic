@@ -1,7 +1,8 @@
 package dynamic
 
 type Tree struct {
-	Nodes []*Node
+	Nodes    []*Node
+	maxLevel int
 }
 
 // offsetX
@@ -55,6 +56,37 @@ func (t *Tree) paths(node *Node) []string {
 	paths := []string{node.Field}
 	paths = append(t.paths(t.GetParent(node)), paths...)
 	return paths
+}
+
+func (t *Tree) meta(node *Node) *Meta {
+	if node == nil {
+		return nil
+	}
+
+	return &Meta{
+		Node:     node,
+		Paths:    t.paths(node),
+		StartX:   t.OffsetX(node),
+		StartY:   node.Y(),
+		CurrentY: node.Y(),
+	}
+}
+
+func (t *Tree) childrenMetas(node *Node) []*Meta {
+	if node == nil {
+		return nil
+	}
+
+	metas := []*Meta{}
+	for _, child := range node.Children {
+		childMeta := t.meta(child)
+		metas = append(metas, childMeta)
+		if len(node.Children) > 0 {
+			metas = append(metas, t.childrenMetas(child)...)
+		}
+	}
+
+	return metas
 }
 
 func (t *Tree) GetParent(node *Node) *Node {
@@ -143,34 +175,19 @@ func (t *Tree) Metas() []*Meta {
 	return metas
 }
 
-func (t *Tree) meta(node *Node) *Meta {
-	if node == nil {
-		return nil
+func (t *Tree) MaxLevel() int {
+	if len(t.Nodes) == 0 {
+		return 0
 	}
 
-	return &Meta{
-		Title:    node.Title,
-		Field:    node.Field,
-		Paths:    t.paths(node),
-		StartX:   t.OffsetX(node),
-		StartY:   node.Y(),
-		CurrentY: node.Y(),
-	}
-}
-
-func (t *Tree) childrenMetas(node *Node) []*Meta {
-	if node == nil {
-		return nil
-	}
-
-	metas := []*Meta{}
-	for _, child := range node.Children {
-		childMeta := t.meta(child)
-		metas = append(metas, childMeta)
-		if len(node.Children) > 0 {
-			metas = append(metas, t.childrenMetas(child)...)
+	if t.maxLevel == 0 {
+		metas := t.Metas()
+		for _, meta := range metas {
+			if meta.Node.Level > t.maxLevel {
+				t.maxLevel = meta.Node.Level
+			}
 		}
 	}
 
-	return metas
+	return t.maxLevel
 }
