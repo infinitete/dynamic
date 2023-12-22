@@ -27,12 +27,11 @@ type Title struct {
 }
 
 type Bookmark struct {
-	Title   string   `xlsx:"-"`
-	Index   int      `xlsx:"col:序号"`
-	Page    int      `xlsx:"col:页数"`
-	Start   Pointer  `xlsx:"col:起始"`
-	End     Pointer  `xlsx:"col:终点"`
-	Readers []string `xlsx:"读者"`
+	Title string  `xlsx:"-"`
+	Index int     `xlsx:"col:序号"`
+	Page  int     `xlsx:"col:页数"`
+	Start Pointer `xlsx:"col:起始"`
+	End   Pointer `xlsx:"col:终点"`
 }
 
 type Book struct {
@@ -73,12 +72,11 @@ var book = Book{
 			X: 65,
 			Y: 122,
 		},
-		Readers: []string{"张三", "李四", "王五"},
 	},
 	Remark: "这本书真的不错哦",
 }
 
-func books() {
+func books_writer() {
 	// 第一步，创建一个excel文件
 	file := excelize.NewFile()
 
@@ -88,7 +86,7 @@ func books() {
 		return
 	}
 
-	size := 10000
+	size := 1
 	books := make([]Book, size)
 	for cur := 0; cur < size; cur++ {
 		book.Bookmark.Index = cur + 1
@@ -102,6 +100,14 @@ func books() {
 	file.SaveAs("book.xlsx")
 }
 
+func books_reader() {
+	reader := dynamic.NewReader[Book]()
+	file, _ := excelize.OpenFile("book.xlsx")
+
+	reader.Read(file, "书本")
+}
+
 func main() {
-	books()
+	// books_writer()
+	books_reader()
 }

@@ -43,15 +43,27 @@ func (node Node) CanMergeRows() bool {
 }
 
 type Parser[T any] struct {
+	tree *Tree[T]
+}
+
+func (p Parser[T]) Tree() *Tree[T] {
+	tree, _ := p.Parse()
+	return tree
 }
 
 func (p Parser[T]) Parse() (*Tree[T], error) {
+	if p.tree != nil {
+		return p.tree, nil
+	}
+
 	var t T
 	depth := 1
 
 	tree := Tree[T]{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
 	_ = tree.Metas()
-	return &tree, nil
+	p.tree = &tree
+
+	return p.tree, nil
 }
 
 func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {

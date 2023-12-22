@@ -11,6 +11,12 @@ type TypedValue struct {
 	Value any
 }
 
+type CellValue struct {
+	X     int
+	Y     int
+	Value string
+}
+
 // Meta
 // 可渲染元数据
 type Meta struct {
