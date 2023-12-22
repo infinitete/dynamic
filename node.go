@@ -1,10 +1,11 @@
 package dynamic
 
 import (
-	"errors"
 	"reflect"
 	"strings"
 )
+
+const ignore = "-"
 
 type Node struct {
 	parent   *Node
@@ -48,11 +49,6 @@ func (p Parser[T]) Parse() (*Tree[T], error) {
 	var t T
 	depth := 1
 
-	typeOf := reflect.TypeOf(t)
-	if typeOf.Kind() != reflect.Struct {
-		return nil, errors.New("type T must be a struct")
-	}
-
 	tree := Tree[T]{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
 	_ = tree.Metas()
 	return &tree, nil
@@ -67,7 +63,7 @@ func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, leve
 	for i := 0; i < fields; i++ {
 		field := typeOf.Field(i)
 		tag := field.Tag.Get("xlsx")
-		if strings.Contains(tag, "ignore") {
+		if tag == ignore {
 			continue
 		}
 		node := &Node{

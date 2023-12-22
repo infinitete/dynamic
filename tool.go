@@ -50,6 +50,10 @@ func getChildrenTypedValue(valueOf reflect.Value, typeOf reflect.Type, beforePat
 	for cur := 0; cur < numField; cur++ {
 		fieldValue := valueOf.Field(cur)
 		fieldType := typeOf.Field(cur)
+		if fieldType.Tag.Get("xlsx") == "-" {
+			continue
+		}
+
 		paths := append(beforePaths, fieldType.Name)
 
 		if fieldType.Type.Kind() == reflect.Struct {

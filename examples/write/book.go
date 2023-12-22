@@ -27,6 +27,7 @@ type Title struct {
 }
 
 type Bookmark struct {
+	Title string  `xlsx:"-"`
 	Index int     `xlsx:"col:序号"`
 	Page  int     `xlsx:"col:页数"`
 	Start Pointer `xlsx:"col:起始"`
@@ -58,6 +59,7 @@ var book = Book{
 		LastName:  "用好",
 	},
 	Bookmark: Bookmark{
+		Title: "虚拟书签",
 		Index: 1,
 		Page:  213,
 		Start: Pointer{
@@ -72,7 +74,7 @@ var book = Book{
 	Remark: "这本书真的不错哦",
 }
 
-func main() {
+func books() {
 	// 第一步，创建一个excel文件
 	file := excelize.NewFile()
 
@@ -94,4 +96,8 @@ func main() {
 
 	// 第四步, 保存文件
 	file.SaveAs("book.xlsx")
+}
+
+func main() {
+	books()
 }
