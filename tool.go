@@ -26,6 +26,7 @@ func numberToLetters(num int) string {
 func getFieldsValue(in any) map[string]TypedValue {
 	valueOf := reflect.ValueOf(in)
 	typeOf := reflect.TypeOf(in)
+
 	var typedValues = []*TypedValue{}
 
 	numField := valueOf.NumField()

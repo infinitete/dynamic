@@ -6,8 +6,8 @@ import (
 )
 
 type Names struct {
-	English string `xlsx:"col:英文名"`
 	Chinese string `xlsx:"col:中文名"`
+	English string `xlsx:"col:英文名"`
 	Franch  string `xlsx:"col:法文名"`
 }
 
@@ -27,21 +27,24 @@ type Title struct {
 }
 
 type Bookmark struct {
-	Title string  `xlsx:"-"`
-	Index int     `xlsx:"col:序号"`
-	Page  int     `xlsx:"col:页数"`
-	Start Pointer `xlsx:"col:起始"`
-	End   Pointer `xlsx:"col:终点"`
+	Title   string   `xlsx:"-"`
+	Index   int      `xlsx:"col:序号"`
+	Page    int      `xlsx:"col:页数"`
+	Start   Pointer  `xlsx:"col:起始"`
+	End     Pointer  `xlsx:"col:终点"`
+	Readers []string `xlsx:"读者"`
 }
 
 type Book struct {
-	Title    Title    `xlsx:"col:书名"`
-	Author   Author   `xlsx:"col:作者"`
-	Bookmark Bookmark `xlsx:"col:书签"`
-	Remark   string   `xlsx:"col:备注"`
+	NotPresented string   `xlsx:"-"`
+	Title        Title    `xlsx:"col:书名"`
+	Author       Author   `xlsx:"col:作者"`
+	Bookmark     Bookmark `xlsx:"col:书签"`
+	Remark       string   `xlsx:"col:备注"`
 }
 
 var book = Book{
+	NotPresented: "这一列是不会渲染的",
 	Title: Title{
 		MainTitle: Names{
 			English: "Song of Zhangsan",
@@ -70,6 +73,7 @@ var book = Book{
 			X: 65,
 			Y: 122,
 		},
+		Readers: []string{"张三", "李四", "王五"},
 	},
 	Remark: "这本书真的不错哦",
 }

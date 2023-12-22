@@ -60,6 +60,7 @@ func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, leve
 
 	*depth = level
 
+	cur := 0
 	for i := 0; i < fields; i++ {
 		field := typeOf.Field(i)
 		tag := field.Tag.Get("xlsx")
@@ -67,11 +68,12 @@ func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, leve
 			continue
 		}
 		node := &Node{
-			index:  i,
+			index:  cur,
 			parent: parent,
 			Level:  level,
 			Depth:  depth,
 		}
+		cur++
 		node.Field = field.Name
 		cases := strings.Split(tag, ",")
 		for _, c := range cases {
@@ -88,8 +90,7 @@ func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, leve
 		}
 
 		node.Kind = field.Type.Kind()
-
-		if field.Type.Kind() == reflect.Struct {
+		if node.Kind == reflect.Struct {
 			node.Children = p.parseType(field.Type, node, depth, level+1)
 		}
 		nodes = append(nodes, node)

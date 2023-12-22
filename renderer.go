@@ -40,7 +40,6 @@ func (r *Renderer[T]) Render(data []T) {
 	bodyStyleId, _ := r.file.NewStyle(&bodyStyle)
 
 	for _, meta := range r.tree.metas {
-
 		start := fmt.Sprintf("%s%d", numberToLetters(meta.StartX), meta.StartY)
 		end := fmt.Sprintf("%s%d", numberToLetters(meta.EndX), meta.EndY)
 		if start != end {
