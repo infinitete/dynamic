@@ -1,6 +1,7 @@
 package dynamic
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 )
@@ -13,6 +14,7 @@ type Node struct {
 	Title    string
 	Level    int
 	Depth    *int
+	Kind     reflect.Kind
 	Children []*Node
 }
 
@@ -39,17 +41,24 @@ func (node Node) CanMergeRows() bool {
 	return node.Rows() > 1
 }
 
-type Parser struct {
+type Parser[T any] struct {
 }
 
-func (p Parser) Parse(t any) Tree {
+func (p Parser[T]) Parse() (*Tree[T], error) {
+	var t T
 	depth := 1
-	tree := Tree{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
+
+	typeOf := reflect.TypeOf(t)
+	if typeOf.Kind() != reflect.Struct {
+		return nil, errors.New("type T must be a struct")
+	}
+
+	tree := Tree[T]{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
 	_ = tree.Metas()
-	return tree
+	return &tree, nil
 }
 
-func (p Parser) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {
+func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {
 	fields := typeOf.NumField()
 	nodes := []*Node{}
 
@@ -81,6 +90,8 @@ func (p Parser) parseType(typeOf reflect.Type, parent *Node, depth *int, level i
 		if node.Title == "" {
 			node.Title = node.Field
 		}
+
+		node.Kind = field.Type.Kind()
 
 		if field.Type.Kind() == reflect.Struct {
 			node.Children = p.parseType(field.Type, node, depth, level+1)

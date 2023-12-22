@@ -1,6 +1,10 @@
 package dynamic
 
-type Tree struct {
+import (
+	"strings"
+)
+
+type Tree[T any] struct {
 	Nodes    []*Node
 	metas    []*Meta
 	maxLevel int
@@ -8,7 +12,7 @@ type Tree struct {
 
 // offsetX
 // 获取一个节点在一棵树中的X偏移
-func (t *Tree) offsetX(node *Node) int {
+func (t *Tree[T]) offsetX(node *Node) int {
 	if node == nil {
 		return 1
 	}
@@ -50,7 +54,7 @@ func (t *Tree) offsetX(node *Node) int {
          A
 */
 // 那么A的路径就是[CField, BField, AField, A]
-func (t *Tree) paths(node *Node) []string {
+func (t *Tree[T]) paths(node *Node) []string {
 	if node == nil {
 		return []string{}
 	}
@@ -60,17 +64,17 @@ func (t *Tree) paths(node *Node) []string {
 	return paths
 }
 
-func (t *Tree) meta(node *Node) *Meta {
+func (t *Tree[T]) meta(node *Node) *Meta {
 	if node == nil {
 		return nil
 	}
 
 	meta := &Meta{
-		Node:     node,
-		Paths:    t.paths(node),
-		StartX:   t.OffsetX(node),
-		StartY:   node.Y(),
-		CurrentY: node.Y(),
+		Node:   node,
+		Paths:  t.paths(node),
+		StartX: t.OffsetX(node),
+		StartY: node.Y(),
+		Kind:   node.Kind,
 	}
 
 	meta.EndX = meta.StartX + meta.Node.Cols() - 1
@@ -79,7 +83,7 @@ func (t *Tree) meta(node *Node) *Meta {
 	return meta
 }
 
-func (t *Tree) childrenMetas(node *Node) []*Meta {
+func (t *Tree[T]) childrenMetas(node *Node) []*Meta {
 	if node == nil {
 		return nil
 	}
@@ -96,11 +100,11 @@ func (t *Tree) childrenMetas(node *Node) []*Meta {
 	return metas
 }
 
-func (t *Tree) GetParent(node *Node) *Node {
+func (t *Tree[T]) GetParent(node *Node) *Node {
 	return node.parent
 }
 
-func (t *Tree) GetPrev(node *Node) *Node {
+func (t *Tree[T]) GetPrev(node *Node) *Node {
 	index := node.index
 	if index == 0 {
 		return nil
@@ -125,7 +129,7 @@ func (t *Tree) GetPrev(node *Node) *Node {
 	return nil
 }
 
-func (t *Tree) GetNext(node *Node) *Node {
+func (t *Tree[T]) GetNext(node *Node) *Node {
 	index := node.index
 	if index == 0 {
 		return nil
@@ -159,7 +163,7 @@ func (t *Tree) GetNext(node *Node) *Node {
 	return nil
 }
 
-func (t Tree) OffsetX(node *Node) int {
+func (t Tree[T]) OffsetX(node *Node) int {
 	if node.offsetX == 0 {
 		node.offsetX = t.offsetX(node)
 	}
@@ -169,7 +173,7 @@ func (t Tree) OffsetX(node *Node) int {
 
 // Metas
 // 获取每一个元素的可渲染元数据
-func (t *Tree) Metas() []*Meta {
+func (t *Tree[T]) Metas() []*Meta {
 	if t.metas != nil {
 		return t.metas
 	}
@@ -193,7 +197,7 @@ func (t *Tree) Metas() []*Meta {
 	return t.metas
 }
 
-func (t *Tree) MaxLevel() int {
+func (t *Tree[T]) MaxLevel() int {
 	if t.Nodes == nil {
 		return 0
 	}
@@ -207,4 +211,33 @@ func (t *Tree) MaxLevel() int {
 	}
 
 	return t.maxLevel
+}
+
+func (t *Tree[T]) ParseValues(data []T) {
+	size := len(data)
+	res := make(map[string][]TypedValue)
+	for _, meta := range t.Metas() {
+		if meta.Node.Level < t.MaxLevel() && len(meta.Node.Children) > 0 {
+			continue
+		}
+
+		res[strings.Join(meta.Paths, ".")] = make([]TypedValue, len(data))
+	}
+
+	for cur := 0; cur < size; cur++ {
+		values := getFieldsValue(data[cur])
+		for k, v := range values {
+			res[k][cur] = v
+		}
+	}
+
+	for _, meta := range t.metas {
+		if meta.Node.Level < t.MaxLevel() && len(meta.Node.Children) > 0 {
+			continue
+		}
+		key := strings.Join(meta.Paths, ".")
+		if values, ok := res[key]; ok {
+			meta.rows = values
+		}
+	}
 }

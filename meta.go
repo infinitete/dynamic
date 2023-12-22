@@ -1,9 +1,29 @@
 package dynamic
 
+import (
+	"fmt"
+	"reflect"
+)
+
+type TypedValue struct {
+	Paths []string
+	Kind  reflect.Kind
+	Value any
+}
+
 // Meta
 // 可渲染元数据
 type Meta struct {
+
+	// rows
+	// 数据
+	rows []TypedValue
+
+	// 节点基本信息
 	Node *Node
+
+	// 数据类型
+	Kind reflect.Kind
 
 	// Paths
 	// 渲染路径
@@ -28,10 +48,10 @@ type Meta struct {
 	/*
 		C:
 		 CField:
-			 BField:
-		     BField
-			   AField:
-		       A
+		   BField:
+			     BField
+		     AField:
+			       A
 	*/
 	// 那么A的路径就是[CField, BField, AField, A]
 	Paths []string
@@ -51,7 +71,21 @@ type Meta struct {
 	// 合并行坐标
 	EndY int
 
-	// CurrentY
+	// currentY
 	// 当前渲染行
-	CurrentY int
+	currentY int
+}
+
+type RenderFun func(coor string, value TypedValue) error
+
+func (m *Meta) Render(fn RenderFun) {
+	dataSize := len(m.rows)
+	if dataSize == 0 {
+		return
+	}
+
+	for cur := 0; cur < dataSize; cur++ {
+		coor := fmt.Sprintf("%s%d", numberToLetters(m.StartX), m.EndY+cur+1)
+		fn(coor, m.rows[cur])
+	}
 }

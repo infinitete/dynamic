@@ -1,5 +1,10 @@
 package dynamic
 
+import (
+	"reflect"
+	"strings"
+)
+
 func numberToLetters(num int) string {
 	if num <= 0 {
 		return ""
@@ -14,4 +19,49 @@ func numberToLetters(num int) string {
 	}
 
 	return result
+}
+
+// GetFieldsValue
+// 通过反射获取传入参数中的所有值
+func getFieldsValue(in any) map[string]TypedValue {
+	valueOf := reflect.ValueOf(in)
+	typeOf := reflect.TypeOf(in)
+	var typedValues = []*TypedValue{}
+
+	numField := valueOf.NumField()
+	for cur := 0; cur < numField; cur++ {
+		typedValues = getChildrenTypedValue(valueOf, typeOf, []string{})
+	}
+
+	values := map[string]TypedValue{}
+
+	for _, value := range typedValues {
+		key := strings.Join(value.Paths, ".")
+		values[key] = *value
+	}
+
+	return values
+}
+
+func getChildrenTypedValue(valueOf reflect.Value, typeOf reflect.Type, beforePaths []string) []*TypedValue {
+	values := []*TypedValue{}
+
+	numField := valueOf.NumField()
+	for cur := 0; cur < numField; cur++ {
+		fieldValue := valueOf.Field(cur)
+		fieldType := typeOf.Field(cur)
+		paths := append(beforePaths, fieldType.Name)
+
+		if fieldType.Type.Kind() == reflect.Struct {
+			values = append(values, getChildrenTypedValue(fieldValue, fieldType.Type, paths)...)
+		} else {
+			values = append(values, &TypedValue{
+				Paths: paths,
+				Kind:  fieldType.Type.Kind(),
+				Value: fieldValue.Interface(),
+			})
+		}
+	}
+
+	return values
 }
