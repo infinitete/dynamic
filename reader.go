@@ -1,21 +1,23 @@
 package dynamic
 
 import (
+	"log"
+
 	"github.com/xuri/excelize/v2"
 )
 
 type Reader[T any] struct {
-	parser   *Parser[T]
-	transfer *Transfer[T]
+	parser *Parser[T]
+	sheet  *Sheet[T]
 }
 
 func NewReader[T any]() *Reader[T] {
 	parser := Parser[T]{}
-	transfer := Transfer[T]{}
+	transfer := Sheet[T]{}
 
 	return &Reader[T]{
-		parser:   &parser,
-		transfer: &transfer,
+		parser: &parser,
+		sheet:  &transfer,
 	}
 }
 
@@ -31,10 +33,12 @@ func (r *Reader[T]) Read(file *excelize.File, sheet string) []T {
 		return nil
 	}
 
-	err = r.transfer.Read(tree, file, sheet)
+	err = r.sheet.Read(tree, file, sheet)
 	if err != nil {
 		return nil
 	}
+
+	log.Printf("数据起始行：%d", r.sheet.DataRowStart())
 
 	return nil
 }

@@ -15,6 +15,34 @@ type CellValue struct {
 	X     int
 	Y     int
 	Value string
+
+	Prev   *CellValue // 上一个元素
+	Next   *CellValue // 下一个元素
+	Parent *CellValue // 父级元素
+}
+
+func (c CellValue) Cell() string {
+	return fmt.Sprintf("%s%d", numberToLetters(c.X), c.Y)
+}
+
+func (c CellValue) PrevCell() string {
+	if c.X == 1 {
+		return ""
+	}
+
+	return fmt.Sprintf("%s%d", numberToLetters(c.X-1), c.Y)
+}
+
+func (c CellValue) NextCell() string {
+	return fmt.Sprintf("%s%d", numberToLetters(c.X+1), c.Y)
+}
+
+func (c CellValue) ParentCell() string {
+	if c.Y == 1 {
+		return ""
+	}
+
+	return fmt.Sprintf("%s%d", numberToLetters(c.X), c.Y-1)
 }
 
 // Meta

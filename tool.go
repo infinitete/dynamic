@@ -1,6 +1,7 @@
 package dynamic
 
 import (
+	"math"
 	"reflect"
 	"strings"
 )
@@ -16,6 +17,21 @@ func numberToLetters(num int) string {
 		letter := string(rune('A' + ((num - 1) % 26)))
 		result = letter + result
 		num = (num - 1) / 26
+	}
+
+	return result
+}
+
+func lettersToNumber(letters string) int {
+	base := 26
+	result := 0
+
+	letters = strings.ToUpper(letters)
+
+	for i := range letters {
+		letter := letters[i]
+		letterValue := int(letter - 'A' + 1)
+		result += letterValue * int(math.Pow(float64(base), float64(len(letters)-i-1)))
 	}
 
 	return result
