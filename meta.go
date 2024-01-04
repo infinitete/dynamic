@@ -16,9 +16,10 @@ type CellValue struct {
 	Y     int
 	Value string
 
-	Prev   *CellValue // 上一个元素
-	Next   *CellValue // 下一个元素
-	Parent *CellValue // 父级元素
+	Alias  *CellValue // 合并对象，添加合并对象的目的是为了根据结构构建结构树
+	Prev   *CellValue // 上一个元素,如果有合并对象，那么他的上一个元素是合并对象的上一个元素
+	Next   *CellValue // 下一个元素,如果有合并对象，那么他的下一个元素是合并对象的下一个元素
+	Parent *CellValue // 父级元素,如果有合并对象，那么他的父级元素是合并对象的父级元素
 }
 
 func (c CellValue) Cell() string {
@@ -43,6 +44,19 @@ func (c CellValue) ParentCell() string {
 	}
 
 	return fmt.Sprintf("%s%d", numberToLetters(c.X), c.Y-1)
+}
+
+func (c CellValue) Paths() []string {
+	var paths = []string{c.Value}
+	var parent = c.Parent
+	for {
+		if parent == nil {
+			break
+		}
+		paths = append(paths, parent.Value)
+		parent = parent.Parent
+	}
+	return paths
 }
 
 // Meta

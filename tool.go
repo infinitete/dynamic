@@ -1,8 +1,10 @@
 package dynamic
 
 import (
+	"fmt"
 	"math"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -85,4 +87,50 @@ func getChildrenTypedValue(valueOf reflect.Value, typeOf reflect.Type, beforePat
 	}
 
 	return values
+}
+
+func fillCells(startCell, endCell string) []string {
+	if startCell == endCell {
+		return []string{startCell}
+	}
+
+	var startXBytes = []byte{}
+	var endXBytes = []byte{}
+	var startYBytes = []byte{}
+	var endYBytes = []byte{}
+
+	for i := 0; i < len(startCell); i++ {
+		if startCell[i] >= 'A' && startCell[i] <= 'Z' {
+			startXBytes = append(startXBytes, startCell[i])
+		} else {
+			startYBytes = []byte(startCell)[i:]
+			break
+		}
+	}
+
+	for i := 0; i < len(endCell); i++ {
+		if endCell[i] >= 'A' && endCell[i] <= 'Z' {
+			endXBytes = append(endXBytes, endCell[i])
+		} else {
+			endYBytes = []byte(endCell)[i:]
+			break
+		}
+	}
+
+	var startX = lettersToNumber(string(startXBytes))
+	var endX = lettersToNumber(string(endXBytes))
+	var startY, _ = strconv.ParseInt(string(startYBytes), 10, 64)
+	var endY, _ = strconv.ParseInt(string(endYBytes), 10, 64)
+
+	var cells = make([]string, (endX-startX+1)*int((endY-startY+1)))
+
+	var idx = 0
+	for x := startX; x <= endX; x++ {
+		for y := startY; y <= endY; y++ {
+			cells[idx] = fmt.Sprintf("%s%d", numberToLetters(x), y)
+			idx++
+		}
+	}
+
+	return cells
 }

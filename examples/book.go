@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/infinitete/dynamic"
 	"github.com/xuri/excelize/v2"
 )
@@ -100,6 +102,16 @@ func books_writer() {
 	file.SaveAs("book.xlsx")
 }
 
+func book_parser() {
+	parser := dynamic.Parser[Book]{}
+	tree, _ := parser.Parse()
+
+	cellValues := tree.ToCellValues()
+	for _, cellValue := range cellValues {
+		fmt.Printf("%s\n", cellValue.Paths())
+	}
+}
+
 func books_reader() {
 	reader := dynamic.NewReader[Book]()
 	file, _ := excelize.OpenFile("book.xlsx")
@@ -110,4 +122,5 @@ func books_reader() {
 func main() {
 	// books_writer()
 	books_reader()
+	// book_parser()
 }

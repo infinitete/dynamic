@@ -241,3 +241,35 @@ func (t *Tree[T]) ParseValues(data []T) {
 		}
 	}
 }
+
+func (t *Tree[T]) ToCellValues() []*CellValue {
+	var cellValuesMap = make(map[string]*CellValue, len(t.Nodes))
+	var cellValues = make([]*CellValue, len(t.Nodes))
+	for idx, node := range t.Nodes {
+		cellValue := node.ToCellValues()
+		cellValues[idx] = &cellValue
+		cellValuesMap[cellValue.Cell()] = &cellValue
+	}
+
+	for _, cellValue := range cellValues {
+		if cellValue.Prev == nil {
+			if prv, ok := cellValuesMap[cellValue.PrevCell()]; ok {
+				prv.Next = cellValue
+				cellValue.Prev = prv
+			}
+		}
+
+		if cellValue.Next == nil {
+			if next, ok := cellValuesMap[cellValue.NextCell()]; ok {
+				next.Prev = cellValue
+				cellValue.Next = next
+			}
+		}
+
+		if parent, ok := cellValuesMap[cellValue.ParentCell()]; ok {
+			cellValue.Parent = parent
+		}
+	}
+
+	return cellValues
+}

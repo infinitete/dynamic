@@ -42,6 +42,16 @@ func (node Node) CanMergeRows() bool {
 	return node.Rows() > 1
 }
 
+func (node Node) ToCellValues() CellValue {
+	value := CellValue{
+		X:     node.offsetX,
+		Y:     node.Level,
+		Value: node.Title,
+	}
+
+	return value
+}
+
 type Parser[T any] struct {
 	tree *Tree[T]
 }
