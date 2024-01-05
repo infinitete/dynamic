@@ -2,7 +2,6 @@ package dynamic
 
 import (
 	"fmt"
-	"log"
 	"slices"
 
 	"strings"
@@ -104,8 +103,8 @@ func (c *Sheet[T]) values() (map[string]*CellValue, error) {
 // 构建非空关系树
 func (c *Sheet[T]) build_relation() {
 	for _, cellValue := range c.mapdValues {
-		nextCell := cellValue.NextCell()
-		parentCell := cellValue.ParentCell()
+		nextCell := cellValue.NextXlsxCell()
+		parentCell := cellValue.ParentXlsxCell()
 
 		if cellValue.Next == nil {
 			if nextCellValue, ok := c.mapdValues[nextCell]; ok {
@@ -126,6 +125,27 @@ func (c *Sheet[T]) build_relation() {
 	}
 }
 
+// GetChildrenCellValues
+// 传入一个CellValue,并获取它的所有子节点
+func (c *Sheet[T]) GetChildrenCellValues(cell *CellValue) []*CellValue {
+	var cellValues = []*CellValue{}
+	if cell == nil {
+		return cellValues
+	}
+
+	for _, value := range c.mapdValues {
+		if value.Y <= cell.Y || value.Parent != cell || value.Y > c.tree.MaxLevel() {
+			continue
+		}
+		if value.Alias != nil {
+			continue
+		}
+		cellValues = append(cellValues, value)
+	}
+
+	return cellValues
+}
+
 func (c *Sheet[T]) Read(tree *Tree[T], file *excelize.File, sheet string) error {
 	c.file = file
 	c.sheet = sheet
@@ -142,15 +162,18 @@ func (c *Sheet[T]) Read(tree *Tree[T], file *excelize.File, sheet string) error 
 		return err
 	}
 
-	log.Printf("N3: %#v", c.mapdValues["N3"])
-
-	for key, value := range cellValues {
-		if value.Y > c.tree.MaxLevel() || value.Value == "" {
+	for _, value := range cellValues {
+		if value.Y != 2 || value.Alias != nil {
 			continue
 		}
-		paths := value.Paths()
-		slices.Reverse(paths)
-		fmt.Printf("[%s]: %s\n", key, strings.Join(paths, "->"))
+
+		children := c.GetChildrenCellValues(value)
+		var childrenString = make([]string, len(children))
+		for idx, child := range children {
+			childrenString[idx] = child.Value
+		}
+		slices.Sort(childrenString)
+		fmt.Printf("[%s] -> (%s)\n", value.Value, strings.Join(childrenString, ","))
 	}
 
 	return nil

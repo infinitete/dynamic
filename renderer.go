@@ -10,7 +10,7 @@ import (
 func NewRenderer[T any](file *excelize.File, sheet string) (*Renderer[T], error) {
 	var t T
 	if reflect.TypeOf(t).Kind() != reflect.Struct {
-		return nil, fmt.Errorf("typeof %T is not sutrct", t)
+		return nil, fmt.Errorf("type of %T is not struct", t)
 	}
 
 	return &Renderer[T]{

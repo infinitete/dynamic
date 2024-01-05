@@ -41,7 +41,7 @@ func (t *Tree[T]) offsetX(node *Node) int {
    // 实际渲染的内容
    type C struct {
       CField int `xlsx:"col:C字段"`
-      BField B `xlxs:"col:B字段"`
+      BField B `xlsx:"col:B字段"`
    }
 */
 // 展开C结构体如下：
@@ -248,25 +248,25 @@ func (t *Tree[T]) ToCellValues() []*CellValue {
 	for idx, node := range t.Nodes {
 		cellValue := node.ToCellValues()
 		cellValues[idx] = &cellValue
-		cellValuesMap[cellValue.Cell()] = &cellValue
+		cellValuesMap[cellValue.XlsxCell()] = &cellValue
 	}
 
 	for _, cellValue := range cellValues {
 		if cellValue.Prev == nil {
-			if prv, ok := cellValuesMap[cellValue.PrevCell()]; ok {
+			if prv, ok := cellValuesMap[cellValue.PrevXlsxCell()]; ok {
 				prv.Next = cellValue
 				cellValue.Prev = prv
 			}
 		}
 
 		if cellValue.Next == nil {
-			if next, ok := cellValuesMap[cellValue.NextCell()]; ok {
+			if next, ok := cellValuesMap[cellValue.NextXlsxCell()]; ok {
 				next.Prev = cellValue
 				cellValue.Next = next
 			}
 		}
 
-		if parent, ok := cellValuesMap[cellValue.ParentCell()]; ok {
+		if parent, ok := cellValuesMap[cellValue.ParentXlsxCell()]; ok {
 			cellValue.Parent = parent
 		}
 	}

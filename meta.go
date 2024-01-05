@@ -22,11 +22,15 @@ type CellValue struct {
 	Parent *CellValue // 父级元素,如果有合并对象，那么他的父级元素是合并对象的父级元素
 }
 
-func (c CellValue) Cell() string {
+// XlsxCell
+// excel表格中的坐标
+func (c CellValue) XlsxCell() string {
 	return fmt.Sprintf("%s%d", numberToLetters(c.X), c.Y)
 }
 
-func (c CellValue) PrevCell() string {
+// PrevXlsxCell
+// 当前元素的上一个坐标
+func (c CellValue) PrevXlsxCell() string {
 	if c.X == 1 {
 		return ""
 	}
@@ -34,11 +38,15 @@ func (c CellValue) PrevCell() string {
 	return fmt.Sprintf("%s%d", numberToLetters(c.X-1), c.Y)
 }
 
-func (c CellValue) NextCell() string {
+// NextXlsxCell
+// 当前元素的下一个坐标
+func (c CellValue) NextXlsxCell() string {
 	return fmt.Sprintf("%s%d", numberToLetters(c.X+1), c.Y)
 }
 
-func (c CellValue) ParentCell() string {
+// ParentXlsxCell
+// 父级元素坐标,即Y轴的上一个元素坐标
+func (c CellValue) ParentXlsxCell() string {
 	if c.Y == 1 {
 		return ""
 	}
@@ -46,7 +54,9 @@ func (c CellValue) ParentCell() string {
 	return fmt.Sprintf("%s%d", numberToLetters(c.X), c.Y-1)
 }
 
-func (c CellValue) Paths() []string {
+// ValuePaths
+// 向上的路径
+func (c CellValue) ValuePaths() []string {
 	var paths = []string{c.Value}
 	var parent = c.Parent
 	for {
