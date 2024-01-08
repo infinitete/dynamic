@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
+
 	"fmt"
 
 	"github.com/infinitete/dynamic"
@@ -42,6 +45,19 @@ type Book struct {
 	Author       Author   `xlsx:"col:作者"`
 	Bookmark     Bookmark `xlsx:"col:书签"`
 	Remark       string   `xlsx:"col:备注"`
+}
+
+type Score struct {
+	Chinese uint8 `xlsx:"col:语文"`
+	Math    uint8 `xlsx:"col:数学"`
+	Engligh uint8 `xlsx:"col:英语"`
+}
+
+type Student struct {
+	Name  string `xlsx:"col:姓名"`
+	Sex   int    `xlsx:"col:性别"`
+	Age   int    `xlsx:"col:年龄"`
+	Score *Score `xlsx:"col:成绩"`
 }
 
 var book = Book{
@@ -106,21 +122,56 @@ func book_parser() {
 	parser := dynamic.Parser[Book]{}
 	tree, _ := parser.Parse()
 
-	cellValues := tree.ToCellValues()
-	for _, cellValue := range cellValues {
-		fmt.Printf("%s\n", cellValue.Paths())
+	nodes := tree.FindNodesByTag(1, "备注")
+	for _, node := range nodes {
+		log.Printf("%#v", node)
 	}
 }
 
 func books_reader() {
-	reader := dynamic.NewReader[Book]()
+	reader, err := dynamic.NewReader[Book]()
+	if err != nil {
+		panic(err)
+	}
 	file, _ := excelize.OpenFile("book.xlsx")
 
-	reader.Read(file, "书本")
+	books := reader.Read(file, "书本")
+	b, _ := json.MarshalIndent(books, "", "  ")
+
+	fmt.Printf("\n%s\n", b)
+}
+
+func student_parser() {
+	parser := dynamic.Parser[Student]{}
+	tree, _ := parser.Parse()
+
+	for _, node := range tree.Metas() {
+		log.Printf("[%s]", node.Node.Title)
+	}
+
+	nodes := tree.FindNodesByTag(0, "数学")
+	for _, node := range nodes {
+		log.Printf("%#v", node)
+	}
+}
+
+func student_reader() {
+	reader, err := dynamic.NewReader[Student]()
+	if err != nil {
+		panic(err)
+	}
+	file, _ := excelize.OpenFile("book.xlsx")
+	students := reader.Read(file, "Demo")
+	b, _ := json.MarshalIndent(students, "", "  ")
+
+	fmt.Printf("\n%s\n", b)
 }
 
 func main() {
 	// books_writer()
-	books_reader()
 	// book_parser()
+	// books_reader()
+
+	// student_parser()
+	student_reader()
 }

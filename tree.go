@@ -273,3 +273,20 @@ func (t *Tree[T]) ToCellValues() []*CellValue {
 
 	return cellValues
 }
+
+// FindNodesByTag
+// 获取所有匹配的节点
+func (t *Tree[T]) FindNodesByTag(level int, tag string) (res []*Node) {
+	if level > t.MaxLevel() {
+		return
+	}
+	res = make([]*Node, 0)
+
+	for _, meta := range t.Metas() {
+		if meta.Node.Level == level && meta.Node.Title == tag {
+			res = append(res, meta.Node)
+		}
+	}
+
+	return
+}

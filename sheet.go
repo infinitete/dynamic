@@ -2,19 +2,16 @@ package dynamic
 
 import (
 	"fmt"
-	"slices"
-
-	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
 
 type Sheet[T any] struct {
-	file         *excelize.File
-	sheet        string
-	tree         *Tree[T]
-	dataRowStart int
-	mapdValues   map[string]*CellValue
+	file        *excelize.File
+	sheet       string
+	depth       int
+	headerLevel int
+	mapdValues  map[string]*CellValue
 
 	// aliasCells
 	// 合并关系,key是被合并对象,value是主索引
@@ -78,6 +75,7 @@ func (c *Sheet[T]) values() (map[string]*CellValue, error) {
 			c.mapdValues[key] = &value
 		}
 	}
+	c.depth = curY
 
 	for key, aliasKey := range c.aliasCells {
 		cell, ok := c.mapdValues[key]
@@ -94,14 +92,14 @@ func (c *Sheet[T]) values() (map[string]*CellValue, error) {
 	}
 
 	rows.Close()
-	c.build_relation()
+	c.buildRelation()
 
 	return c.mapdValues, nil
 }
 
 // build_relation
 // 构建非空关系树
-func (c *Sheet[T]) build_relation() {
+func (c *Sheet[T]) buildRelation() {
 	for _, cellValue := range c.mapdValues {
 		nextCell := cellValue.NextXlsxCell()
 		parentCell := cellValue.ParentXlsxCell()
@@ -134,7 +132,7 @@ func (c *Sheet[T]) GetChildrenCellValues(cell *CellValue) []*CellValue {
 	}
 
 	for _, value := range c.mapdValues {
-		if value.Y <= cell.Y || value.Parent != cell || value.Y > c.tree.MaxLevel() {
+		if value.Y <= cell.Y || value.Parent != cell || value.Y > c.headerLevel {
 			continue
 		}
 		if value.Alias != nil {
@@ -146,41 +144,53 @@ func (c *Sheet[T]) GetChildrenCellValues(cell *CellValue) []*CellValue {
 	return cellValues
 }
 
-func (c *Sheet[T]) Read(tree *Tree[T], file *excelize.File, sheet string) error {
+// Read
+// 从excel中读取数据并转换称CellValue
+func (c *Sheet[T]) Read(file *excelize.File, sheet string) (map[string]*CellValue, error) {
 	c.file = file
 	c.sheet = sheet
 
 	_, err := file.GetSheetIndex(sheet)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	c.tree = tree
 	c.buildAlias()
 
-	cellValues, err := c.values()
-	if err != nil {
-		return err
-	}
-
-	for _, value := range cellValues {
-		if value.Y != 2 || value.Alias != nil {
-			continue
-		}
-
-		children := c.GetChildrenCellValues(value)
-		var childrenString = make([]string, len(children))
-		for idx, child := range children {
-			childrenString[idx] = child.Value
-		}
-		slices.Sort(childrenString)
-		fmt.Printf("[%s] -> (%s)\n", value.Value, strings.Join(childrenString, ","))
-	}
-
-	return nil
+	return c.values()
 }
 
 // DataRowStart
 // 数据行起始，是根据传入数据结构的判断
 func (c *Sheet[T]) DataRowStart() int {
-	return c.tree.MaxLevel() + 1
+	return c.headerLevel + 1
+}
+
+// FindHeader
+// 从头中找到某一行某个值的所有元素
+func (c *Sheet[T]) FindHeader(level int, value string) (res []*CellValue) {
+	if level > c.headerLevel {
+		return
+	}
+
+	res = make([]*CellValue, 0)
+
+	for _, cellValue := range c.mapdValues {
+		if cellValue.Y == level && cellValue.Value == value {
+			res = append(res, cellValue)
+		}
+	}
+
+	return res
+}
+
+func (c *Sheet[T]) GetHeaderCellValues() []*CellValue {
+	var cellValues = []*CellValue{}
+	for _, cellValue := range c.mapdValues {
+		if cellValue.Y > c.headerLevel || cellValue.Alias != nil {
+			continue
+		}
+		cellValues = append(cellValues, cellValue)
+	}
+
+	return cellValues
 }

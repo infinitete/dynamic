@@ -1,6 +1,7 @@
 package dynamic
 
 import (
+	"log"
 	"reflect"
 	"strings"
 )
@@ -52,16 +53,26 @@ func (node Node) ToCellValues() CellValue {
 	return value
 }
 
+func (node Node) FindChildByTitle(title string) *Node {
+	for _, child := range node.Children {
+		if child.Title == title {
+			return child
+		}
+	}
+
+	return nil
+}
+
 type Parser[T any] struct {
 	tree *Tree[T]
 }
 
-func (p Parser[T]) Tree() *Tree[T] {
+func (p *Parser[T]) Tree() *Tree[T] {
 	tree, _ := p.Parse()
 	return tree
 }
 
-func (p Parser[T]) Parse() (*Tree[T], error) {
+func (p *Parser[T]) Parse() (*Tree[T], error) {
 	if p.tree != nil {
 		return p.tree, nil
 	}
@@ -76,7 +87,10 @@ func (p Parser[T]) Parse() (*Tree[T], error) {
 	return p.tree, nil
 }
 
-func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {
+func (p *Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {
+	if typeOf.Kind() == reflect.Ptr {
+		typeOf = typeOf.Elem()
+	}
 	fields := typeOf.NumField()
 	nodes := []*Node{}
 
@@ -111,10 +125,28 @@ func (p Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, leve
 			node.Title = node.Field
 		}
 
-		node.Kind = field.Type.Kind()
-		if node.Kind == reflect.Struct {
-			node.Children = p.parseType(field.Type, node, depth, level+1)
+		var isPtr = field.Type.Kind() == reflect.Ptr
+		var fieldType = field.Type
+
+		if isPtr {
+			reflectValue := reflect.New(reflect.StructOf([]reflect.StructField{field}))
+			node.Kind = reflectValue.Elem().Kind()
+			field.Type = reflectValue.Elem().Type()
+		} else {
+			node.Kind = field.Type.Kind()
 		}
+		log.Printf("[%s] -> [%s]", field.Name, node.Kind)
+
+		// // TODO
+		// 		if node.Kind == reflect.Ptr {
+		// 	log.Printf("%#v -> %d", reflect.Indirect(reflectValue), level)
+		// 	node.Children = p.parseType(reflect.Indirect(reflectValue).Type(), node, depth, level+1)
+		// }
+
+		if node.Kind == reflect.Struct {
+			node.Children = p.parseType(fieldType, node, depth, level+1)
+		}
+
 		nodes = append(nodes, node)
 	}
 
