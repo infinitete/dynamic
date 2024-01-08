@@ -1,7 +1,7 @@
 package dynamic
 
 import (
-	"log"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -80,14 +80,19 @@ func (p *Parser[T]) Parse() (*Tree[T], error) {
 	var t T
 	depth := 1
 
-	tree := Tree[T]{Nodes: p.parseType(reflect.TypeOf(t), nil, &depth, 1)}
+	nodes, err := p.parseType(reflect.TypeOf(t), nil, &depth, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	tree := Tree[T]{Nodes: nodes}
 	_ = tree.Metas()
 	p.tree = &tree
 
 	return p.tree, nil
 }
 
-func (p *Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) []*Node {
+func (p *Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, level int) ([]*Node, error) {
 	if typeOf.Kind() == reflect.Ptr {
 		typeOf = typeOf.Elem()
 	}
@@ -99,6 +104,11 @@ func (p *Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, lev
 	cur := 0
 	for i := 0; i < fields; i++ {
 		field := typeOf.Field(i)
+
+		if field.Type.Kind() == reflect.Ptr {
+			return nil, fmt.Errorf("type %s mus not be contains  pointer field", typeOf.Name())
+		}
+
 		tag := field.Tag.Get("xlsx")
 		if tag == ignore {
 			continue
@@ -125,30 +135,18 @@ func (p *Parser[T]) parseType(typeOf reflect.Type, parent *Node, depth *int, lev
 			node.Title = node.Field
 		}
 
-		var isPtr = field.Type.Kind() == reflect.Ptr
-		var fieldType = field.Type
-
-		if isPtr {
-			reflectValue := reflect.New(reflect.StructOf([]reflect.StructField{field}))
-			node.Kind = reflectValue.Elem().Kind()
-			field.Type = reflectValue.Elem().Type()
-		} else {
-			node.Kind = field.Type.Kind()
-		}
-		log.Printf("[%s] -> [%s]", field.Name, node.Kind)
-
-		// // TODO
-		// 		if node.Kind == reflect.Ptr {
-		// 	log.Printf("%#v -> %d", reflect.Indirect(reflectValue), level)
-		// 	node.Children = p.parseType(reflect.Indirect(reflectValue).Type(), node, depth, level+1)
-		// }
+		node.Kind = field.Type.Kind()
 
 		if node.Kind == reflect.Struct {
-			node.Children = p.parseType(fieldType, node, depth, level+1)
+			children, err := p.parseType(field.Type, node, depth, level+1)
+			if err != nil {
+				return nil, err
+			}
+			node.Children = children
 		}
 
 		nodes = append(nodes, node)
 	}
 
-	return nodes
+	return nodes, nil
 }

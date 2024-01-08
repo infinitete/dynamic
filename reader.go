@@ -231,7 +231,5 @@ func (r *Reader[T]) setStructValue(t *T, kind reflect.Kind, paths []string, valu
 		valueOf.SetString(value)
 	}
 
-	log.Printf("Set Value: [%s] -> %v", strings.Join(paths, "->"), valueOf)
-
 	return nil
 }

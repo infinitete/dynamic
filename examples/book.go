@@ -57,7 +57,7 @@ type Student struct {
 	Name  string `xlsx:"col:姓名"`
 	Sex   int    `xlsx:"col:性别"`
 	Age   int    `xlsx:"col:年龄"`
-	Score *Score `xlsx:"col:成绩"`
+	Score Score  `xlsx:"col:成绩"`
 }
 
 var book = Book{
@@ -158,10 +158,11 @@ func student_parser() {
 func student_reader() {
 	reader, err := dynamic.NewReader[Student]()
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error: %s", err)
+		return
 	}
 	file, _ := excelize.OpenFile("book.xlsx")
-	students := reader.Read(file, "Demo")
+	students := reader.Read(file, "Sheet1")
 	b, _ := json.MarshalIndent(students, "", "  ")
 
 	fmt.Printf("\n%s\n", b)
@@ -169,9 +170,7 @@ func student_reader() {
 
 func main() {
 	// books_writer()
-	// book_parser()
 	// books_reader()
 
-	// student_parser()
 	student_reader()
 }
