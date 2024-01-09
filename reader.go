@@ -67,10 +67,15 @@ func (r *Reader[T]) Read(file *excelize.File, sheet string) []T {
 		}
 
 		nodes := r.parser.tree.FindNodesByTag(header.Y, header.Value)
-		if len(nodes) == 0 || !r.fullMatch(nodes[0], header) {
-			continue
+
+	f:
+		for i := 0; i < len(nodes); i++ {
+			node := nodes[i]
+			if node.Title == header.Value && r.fullMatch(node, header) {
+				node.offsetX = header.X
+				break f
+			}
 		}
-		nodes[0].offsetX = header.X
 	}
 
 	var nodeValues = map[*Node]map[int]string{}
@@ -142,6 +147,13 @@ func (r *Reader[T]) fullMatch(node *Node, cell *CellValue) bool {
 
 	if node.Title != cell.Value {
 		return false
+	}
+
+	// 向上匹配
+	if node.parent != nil && cell.Parent != nil {
+		if strings.Join(node.Paths(), ".") != strings.Join(cell.ValuePaths(), ".") {
+			return false
+		}
 	}
 
 	// 子节点完全匹配

@@ -63,6 +63,19 @@ func (node Node) FindChildByTitle(title string) *Node {
 	return nil
 }
 
+func (node Node) Paths() []string {
+	var paths = []string{node.Title}
+	n := node.parent
+	for {
+		if n == nil {
+			break
+		}
+		paths = append(paths, n.Title)
+		n = n.parent
+	}
+	return paths
+}
+
 type Parser[T any] struct {
 	tree *Tree[T]
 }

@@ -47,10 +47,21 @@ type Book struct {
 	Remark       string   `xlsx:"col:备注"`
 }
 
+type Math struct {
+	Normal  int `xlsx:"col:平时成绩"`
+	Examing int `xlsx:"col:考试成绩"`
+	Final   int `xlsx:"col:最终成绩"`
+}
+type Chinese struct {
+	Normal  int `xlsx:"col:平时成绩"`
+	Examing int `xlsx:"col:考试成绩"`
+	Final   int `xlsx:"col:最终成绩"`
+	Point   int `xlsx:"绩点"`
+}
+
 type Score struct {
-	Chinese uint8 `xlsx:"col:语文"`
-	Math    uint8 `xlsx:"col:数学"`
-	Engligh uint8 `xlsx:"col:英语"`
+	Chinese Chinese `xlsx:"col:语文"`
+	Math    Math    `xlsx:"col:数学"`
 }
 
 type Student struct {
@@ -162,7 +173,7 @@ func student_reader() {
 		return
 	}
 	file, _ := excelize.OpenFile("book.xlsx")
-	students := reader.Read(file, "Sheet1")
+	students := reader.Read(file, "Demo")
 	b, _ := json.MarshalIndent(students, "", "  ")
 
 	fmt.Printf("\n%s\n", b)
