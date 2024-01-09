@@ -24,10 +24,14 @@ func (node Node) Y() int {
 	return node.Level
 }
 
+// Rows
+// 获取节点所占行数
 func (node Node) Rows() int {
 	return *node.Depth - node.Level + 1
 }
 
+// Cols
+// 获取该节点所占列数
 func (node Node) Cols() int {
 	if len(node.Children) == 0 {
 		return 1
@@ -63,6 +67,8 @@ func (node Node) FindChildByTitle(title string) *Node {
 	return nil
 }
 
+// Paths
+// 获取节点的值路径
 func (node Node) Paths() []string {
 	var paths = []string{node.Title}
 	n := node.parent
@@ -85,6 +91,12 @@ func (p *Parser[T]) Tree() *Tree[T] {
 	return tree
 }
 
+// Parse
+// 解析指定的类型，并返回一颗解析树
+// 类型不是结构体，那么返回错误
+// 如果类型中包含指针，那么解析返回错误
+// 为什么不解析指针：
+// 这个库的目标是读取和写入excel，excel中任何一个节点的值都有确定类型和值
 func (p *Parser[T]) Parse() (*Tree[T], error) {
 	if p.tree != nil {
 		return p.tree, nil
